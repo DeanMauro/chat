@@ -66,6 +66,7 @@ import {
   isEncryptedTokenData,
 } from "./crypto";
 import { SlackFormatConverter } from "./markdown";
+import { replaceBareMentions } from "./mentions";
 import {
   decodeModalMetadata,
   encodeModalMetadata,
@@ -119,38 +120,6 @@ function findNextMention(text: string): number {
 const TRAILING_SLASH_PATTERN = /\/$/;
 const UNFURL_WAIT_MS = 2000;
 const UNFURL_POLL_MS = 150;
-
-interface CodeRange {
-  end: number;
-  start: number;
-}
-
-function findCodeRanges(text: string): CodeRange[] {
-  const ranges: CodeRange[] = [];
-
-  // Match code blocks first (triple backticks), then inline code (single backticks)
-  // Code blocks: ```...``` (may span multiple lines)
-  // Inline code: `...` (single line, no nested backticks)
-  const codeBlockPattern = /```[\s\S]*?```/g;
-  const inlineCodePattern = /`[^`\n]+`/g;
-
-  for (const match of text.matchAll(codeBlockPattern)) {
-    ranges.push({ start: match.index, end: match.index + match[0].length });
-  }
-  for (const match of text.matchAll(inlineCodePattern)) {
-    const start = match.index;
-    const end = start + match[0].length;
-    // Skip if this inline code is inside a code block
-    if (!ranges.some((r) => start >= r.start && end <= r.end)) {
-      ranges.push({ start, end });
-    }
-  }
-  return ranges;
-}
-
-function isInsideCodeRange(index: number, ranges: CodeRange[]): boolean {
-  return ranges.some((r) => index >= r.start && index < r.end);
-}
 
 interface SlackUnfurl {
   description?: string;
@@ -3040,33 +3009,17 @@ export class SlackAdapter implements Adapter<SlackThreadId, unknown> {
       return text;
     }
     const state = this.chat.getState();
-
-    // Build ranges for code spans and code blocks to skip mentions inside them
-    const codeRanges = findCodeRanges(text);
-
-    // Find all @word patterns that aren't already wrapped in <@...>
-    const mentionPattern = /@(\w+)/g;
     const mentions = new Map<string, string[]>();
 
-    for (const match of text.matchAll(mentionPattern)) {
-      const name = match[1];
-      // Skip if already a Slack user ID format or inside <@...>
+    replaceBareMentions(text, (mention, name) => {
       if (SLACK_USER_ID_EXACT_PATTERN.test(name)) {
-        continue;
-      }
-      // Check the character before @ to skip <@...> patterns
-      const idx = match.index;
-      if (idx > 0 && text[idx - 1] === "<") {
-        continue;
-      }
-      // Skip if inside a code span or code block
-      if (isInsideCodeRange(idx, codeRanges)) {
-        continue;
+        return mention;
       }
       if (!mentions.has(name.toLowerCase())) {
         mentions.set(name.toLowerCase(), []);
       }
-    }
+      return mention;
+    });
 
     if (mentions.size === 0) {
       return text;
@@ -3092,39 +3045,27 @@ export class SlackAdapter implements Adapter<SlackThreadId, unknown> {
       participants = new Set(participantList);
     }
 
-    // Replace mentions in text
-    return text.replace(
-      mentionPattern,
-      (match, name: string, offset: number) => {
-        if (offset > 0 && text[offset - 1] === "<") {
-          return match;
-        }
-        if (SLACK_USER_ID_EXACT_PATTERN.test(name)) {
-          return match;
-        }
-        // Skip if inside a code span or code block
-        if (isInsideCodeRange(offset, codeRanges)) {
-          return match;
-        }
-
-        const userIds = mentions.get(name.toLowerCase());
-        if (!userIds || userIds.length === 0) {
-          return match;
-        }
-        if (userIds.length === 1) {
-          return `<@${userIds[0]}>`;
-        }
-        // Disambiguate using thread participants
-        if (participants) {
-          const inThread = userIds.filter((id) => participants.has(id));
-          if (inThread.length === 1) {
-            return `<@${inThread[0]}>`;
-          }
-        }
-        // Still ambiguous — leave as plain text
-        return match;
+    return replaceBareMentions(text, (mention, name) => {
+      if (SLACK_USER_ID_EXACT_PATTERN.test(name)) {
+        return mention;
       }
-    );
+
+      const userIds = mentions.get(name.toLowerCase());
+      if (!userIds || userIds.length === 0) {
+        return mention;
+      }
+      if (userIds.length === 1) {
+        return `<@${userIds[0]}>`;
+      }
+      // Disambiguate using thread participants
+      if (participants) {
+        const inThread = userIds.filter((id) => participants.has(id));
+        if (inThread.length === 1) {
+          return `<@${inThread[0]}>`;
+        }
+      }
+      return mention;
+    });
   }
 
   /**
