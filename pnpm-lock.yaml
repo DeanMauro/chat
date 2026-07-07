@@ -439,6 +439,9 @@ importers:
         specifier: workspace:*
         version: link:../chat
     devDependencies:
+      '@chat-adapter/tests':
+        specifier: workspace:*
+        version: link:../tests
       '@types/node':
         specifier: ^25.3.2
         version: 25.3.2
@@ -464,6 +467,9 @@ importers:
         specifier: workspace:*
         version: link:../chat
     devDependencies:
+      '@chat-adapter/tests':
+        specifier: workspace:*
+        version: link:../tests
       '@types/node':
         specifier: ^25.3.2
         version: 25.3.2
@@ -533,6 +539,9 @@ importers:
         specifier: workspace:*
         version: link:../chat
     devDependencies:
+      '@chat-adapter/tests':
+        specifier: workspace:*
+        version: link:../tests
       '@types/node':
         specifier: ^25.3.2
         version: 25.3.2
