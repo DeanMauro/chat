@@ -1,5 +1,16 @@
 # chat
 
+## 4.35.0
+
+### Minor Changes
+
+- 46681f5: Expose Microsoft Graph email addresses on normalized incoming Teams message authors. Resolved user profiles are cached in the state adapter (1 hour, failed lookups 5 minutes) so the lookup doesn't add a Graph call per message.
+
+### Patch Changes
+
+- 80def3a: Add optional `isSystem` field to the normalized message `Author` type to distinguish platform-generated messages from humans and bots. The Slack adapter now sets `isSystem: true` for messages authored by Slack's reserved `USLACK` user (e.g. "@user archived the channel" notifications in DMs), so consumers no longer need to hard-code Slack-specific user IDs.
+- 93a58af: Show explicitly configured progress as a native Teams DM status while preserving native streaming.
+
 ## 4.34.0
 
 ### Minor Changes

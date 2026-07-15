@@ -1,5 +1,16 @@
 # @chat-adapter/slack
 
+## 4.35.0
+
+### Patch Changes
+
+- 80def3a: Add optional `isSystem` field to the normalized message `Author` type to distinguish platform-generated messages from humans and bots. The Slack adapter now sets `isSystem: true` for messages authored by Slack's reserved `USLACK` user (e.g. "@user archived the channel" notifications in DMs), so consumers no longer need to hard-code Slack-specific user IDs.
+- Updated dependencies [80def3a]
+- Updated dependencies [46681f5]
+- Updated dependencies [93a58af]
+  - chat@4.35.0
+  - @chat-adapter/shared@4.35.0
+
 ## 4.34.0
 
 ### Minor Changes

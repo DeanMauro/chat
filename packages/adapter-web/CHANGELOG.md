@@ -1,5 +1,15 @@
 # @chat-adapter/web
 
+## 4.35.0
+
+### Patch Changes
+
+- Updated dependencies [80def3a]
+- Updated dependencies [46681f5]
+- Updated dependencies [93a58af]
+  - chat@4.35.0
+  - @chat-adapter/shared@4.35.0
+
 ## 4.34.0
 
 ### Minor Changes

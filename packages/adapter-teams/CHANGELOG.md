@@ -1,5 +1,21 @@
 # @chat-adapter/teams
 
+## 4.35.0
+
+### Minor Changes
+
+- 46681f5: Expose Microsoft Graph email addresses on normalized incoming Teams message authors. Resolved user profiles are cached in the state adapter (1 hour, failed lookups 5 minutes) so the lookup doesn't add a Graph call per message.
+
+### Patch Changes
+
+- 3895ab3: Fall back to Microsoft Graph's user principal name when a Teams user has no mail address.
+- 93a58af: Show explicitly configured progress as a native Teams DM status while preserving native streaming.
+- Updated dependencies [80def3a]
+- Updated dependencies [46681f5]
+- Updated dependencies [93a58af]
+  - chat@4.35.0
+  - @chat-adapter/shared@4.35.0
+
 ## 4.34.0
 
 ### Patch Changes
